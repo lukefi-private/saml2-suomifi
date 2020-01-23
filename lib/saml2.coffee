@@ -26,28 +26,34 @@ class SAMLError extends Error
 
 # Creates an AuthnRequest and returns it as a string of xml along with the randomly generated ID for the created
 # request.
-create_authn_request = (issuer, assert_endpoint, destination, force_authn, context, nameid_format) ->
+create_authn_request = (issuer, assert_endpoint, destination, force_authn, context, nameid_format, additional_elements) ->
   if context?
     context_element = _(context.class_refs).map (class_ref) -> 'saml:AuthnContextClassRef': class_ref
     context_element.push '@Comparison': context.comparison
 
+  request_object =
+    '@xmlns': XMLNS.SAMLP
+    '@xmlns:saml': XMLNS.SAML
+    '@Version': '2.0'
+    '@ID': id
+    '@IssueInstant': (new Date()).toISOString()
+    '@Destination': destination
+    '@AssertionConsumerServiceURL': assert_endpoint
+    '@ProtocolBinding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+    '@ForceAuthn': force_authn
+    'saml:Issuer': issuer
+    NameIDPolicy:
+      '@Format': nameid_format or 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
+      '@AllowCreate': 'true'
+    RequestedAuthnContext: context_element
+
+  if additional_elements?
+    for additional_element of additional_elements
+      request_object[additional_element] = additional_elements[additional_element]
+
   id = '_' + crypto.randomBytes(21).toString('hex')
   xml = xmlbuilder.create
-    AuthnRequest:
-      '@xmlns': XMLNS.SAMLP
-      '@xmlns:saml': XMLNS.SAML
-      '@Version': '2.0'
-      '@ID': id
-      '@IssueInstant': (new Date()).toISOString()
-      '@Destination': destination
-      '@AssertionConsumerServiceURL': assert_endpoint
-      '@ProtocolBinding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
-      '@ForceAuthn': force_authn
-      'saml:Issuer': issuer
-      NameIDPolicy:
-        '@Format': nameid_format or 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
-        '@AllowCreate': 'true'
-      RequestedAuthnContext: context_element
+    AuthnRequest: request_object
   .end()
   { id, xml }
 
@@ -550,7 +556,7 @@ module.exports.ServiceProvider =
     create_login_request_url: (identity_provider, options, cb) ->
       options = set_option_defaults options, identity_provider.shared_options, @shared_options
 
-      { id, xml } = create_authn_request @entity_id, @assert_endpoint, identity_provider.sso_login_url, options.force_authn, options.auth_context, options.nameid_format
+      { id, xml } = create_authn_request @entity_id, @assert_endpoint, identity_provider.sso_login_url, options.force_authn, options.auth_context, options.nameid_format, options.additional_elements
       zlib.deflateRaw xml, (err, deflated) =>
         return cb err if err?
         try
