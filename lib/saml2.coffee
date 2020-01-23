@@ -66,32 +66,40 @@ sign_authn_request = (xml, private_key, options) ->
   return signer.getSignedXml()
 
 # Creates metadata and returns it as a string of XML. The metadata has one POST assertion endpoint.
-create_metadata = (entity_id, assert_endpoint, signing_certificates, encryption_certificates) ->
+create_metadata = (entity_id, assert_endpoint, signing_certificates, encryption_certificates, additional_elements) ->
   signing_cert_descriptors = for signing_certificate in signing_certificates or []
     {'md:KeyDescriptor': certificate_to_keyinfo('signing', signing_certificate)}
 
   encryption_cert_descriptors = for encryption_certificate in encryption_certificates or []
     {'md:KeyDescriptor': certificate_to_keyinfo('encryption', encryption_certificate)}
 
+  entity_descriptor = {
+    '@xmlns:md': XMLNS.MD
+    '@xmlns:ds': XMLNS.DS
+    '@entityID': entity_id
+    '@validUntil': (new Date(Date.now() + 1000 * 60 * 60)).toISOString()
+    'md:SPSSODescriptor': []
+      .concat {'@protocolSupportEnumeration': 'urn:oasis:names:tc:SAML:1.1:protocol urn:oasis:names:tc:SAML:2.0:protocol'}
+      .concat signing_cert_descriptors
+      .concat encryption_cert_descriptors
+      .concat [
+        'md:SingleLogoutService':
+          '@Binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+          '@Location': assert_endpoint
+        'md:AssertionConsumerService':
+          '@Binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
+          '@Location': assert_endpoint
+          '@index': '0'
+      ]
+    .concat if additional_elements and additional_elements.spsso_descriptor then additional_elements.spsso_descriptor else []
+  }
+
+  if additional_elements and additional_elements.entity_descriptor?
+    for additional_element of additional_elements.entity_descriptor
+      entity_descriptor[additional_element] = additional_elements.entity_descriptor[additional_element]
+
   xmlbuilder.create
-    'md:EntityDescriptor':
-      '@xmlns:md': XMLNS.MD
-      '@xmlns:ds': XMLNS.DS
-      '@entityID': entity_id
-      '@validUntil': (new Date(Date.now() + 1000 * 60 * 60)).toISOString()
-      'md:SPSSODescriptor': []
-        .concat {'@protocolSupportEnumeration': 'urn:oasis:names:tc:SAML:1.1:protocol urn:oasis:names:tc:SAML:2.0:protocol'}
-        .concat signing_cert_descriptors
-        .concat encryption_cert_descriptors
-        .concat [
-          'md:SingleLogoutService':
-            '@Binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
-            '@Location': assert_endpoint
-          'md:AssertionConsumerService':
-            '@Binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
-            '@Location': assert_endpoint
-            '@index': '0'
-        ]
+    'md:EntityDescriptor': entity_descriptor
   .end()
 
 # Creates a LogoutRequest and returns it as a string of xml.
@@ -725,9 +733,9 @@ module.exports.ServiceProvider =
 
     # Returns:
     #   XML metadata, used during initial SAML configuration
-    create_metadata: =>
+    create_metadata: (options) ->
       certs = [@certificate].concat @alt_certs
-      create_metadata @entity_id, @assert_endpoint, certs, certs
+      create_metadata @entity_id, @assert_endpoint, certs, certs, options.additional_elements
 
 module.exports.IdentityProvider =
   class IdentityProvider
