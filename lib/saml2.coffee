@@ -31,8 +31,10 @@ create_authn_request = (issuer, assert_endpoint, destination, force_authn, conte
     context_element = _(context.class_refs).map (class_ref) -> 'saml:AuthnContextClassRef': class_ref
     context_element.push '@Comparison': context.comparison
 
+  id = '_' + crypto.randomBytes(21).toString('hex')
+  
   request_object =
-    '@xmlns': XMLNS.SAMLP
+    '@xmlns:samlp': XMLNS.SAMLP
     '@xmlns:saml': XMLNS.SAML
     '@Version': '2.0'
     '@ID': id
@@ -41,8 +43,10 @@ create_authn_request = (issuer, assert_endpoint, destination, force_authn, conte
     '@AssertionConsumerServiceURL': assert_endpoint
     '@ProtocolBinding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'
     '@ForceAuthn': force_authn
-    'saml:Issuer': issuer
-    NameIDPolicy:
+    'saml:Issuer':
+      '@xmlns:saml': 'urn:oasis:names:tc:SAML:2.0:assertion',
+      '#text': issuer
+    'samlp:NameIDPolicy':
       '@Format': nameid_format or 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified'
       '@AllowCreate': 'true'
     RequestedAuthnContext: context_element
@@ -51,9 +55,8 @@ create_authn_request = (issuer, assert_endpoint, destination, force_authn, conte
     for additional_element of additional_elements
       request_object[additional_element] = additional_elements[additional_element]
 
-  id = '_' + crypto.randomBytes(21).toString('hex')
   xml = xmlbuilder.create
-    AuthnRequest: request_object
+    'samlp:AuthnRequest': request_object
   .end()
   { id, xml }
 
