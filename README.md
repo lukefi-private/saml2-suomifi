@@ -1,6 +1,8 @@
-# SAML2-js
+# SAML2-suomifi
 
-[![CircleCI](https://circleci.com/gh/Clever/saml2/tree/master.svg?style=svg)](https://circleci.com/gh/Clever/saml2/tree/master)
+Forked version of saml2-js module that makes the syntax compatible with Suomi.fi e-identification. Original readme below.
+
+---
 
 `saml2-js` is a node module that abstracts away the complexities of the SAML protocol behind an easy to use interface.
 
