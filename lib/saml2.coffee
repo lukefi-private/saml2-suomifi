@@ -106,7 +106,7 @@ create_metadata = (entity_id, assert_endpoint, signing_certificates, encryption_
   .end()
 
 # Creates a LogoutRequest and returns it as a string of xml.
-create_logout_request = (issuer, name_id, session_index, destination) ->
+create_logout_request = (issuer, name_id, session_index, destination, idp_entity_id) ->
   id = '_' + crypto.randomBytes( 21 ).toString( 'hex' )
   xml = xmlbuilder.create
     'samlp:LogoutRequest':
@@ -116,8 +116,15 @@ create_logout_request = (issuer, name_id, session_index, destination) ->
       '@Version': '2.0'
       '@IssueInstant': (new Date()).toISOString()
       '@Destination': destination
-      'saml:Issuer': issuer
-      'saml:NameID': name_id
+      'saml:Issuer':
+        '@xmlns:saml': 'urn:oasis:names:tc:SAML:2.0:assertion',
+        '#text': issuer
+      'saml2:NameID':
+        '@Format': 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient',
+        '@xmlns:saml2': 'urn:oasis:names:tc:SAML:2.0:assertion',
+        '@NameQualifier': idp_entity_id,
+        '@SPNameQualifier': issuer,
+        '#text': name_id
       'samlp:SessionIndex': session_index
   .end()
 
@@ -589,7 +596,7 @@ module.exports.ServiceProvider =
     #   options
     create_authn_request_xml: (identity_provider, options) ->
       options = set_option_defaults options, identity_provider.shared_options, @shared_options
-
+ 
       { id, xml } = create_authn_request @entity_id, @assert_endpoint, identity_provider.sso_login_url, options.force_authn, options.auth_context, options.nameid_format
       return sign_authn_request(xml, @private_key, options)
 
@@ -692,7 +699,7 @@ module.exports.ServiceProvider =
     create_logout_request_url: (identity_provider, options, cb) =>
       identity_provider = { sso_logout_url: identity_provider, options: {} } if _.isString(identity_provider)
       options = set_option_defaults options, identity_provider.shared_options, @shared_options
-      {id, xml} = create_logout_request @entity_id, options.name_id, options.session_index, identity_provider.sso_logout_url
+      {id, xml} = create_logout_request @entity_id, options.name_id, options.session_index, identity_provider.sso_logout_url, identity_provider.entity_id
       zlib.deflateRaw xml, (err, deflated) =>
         return cb err if err?
         try
