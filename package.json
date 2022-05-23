@@ -1,6 +1,6 @@
 {
   "name": "@lukefi-private/saml2-suomifi",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "SAML 2.0 node helpers for Suomi.fi",
   "author": "Winter <info@winteragency.se> (https://winteragency.se)",
   "contributors": [
