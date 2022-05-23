@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/winteragency/saml2-suomifi.git"
+    "url": "git://github.com/lukefi-private/saml2-suomifi.git"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
@@ -27,9 +27,6 @@
     "suomi.fi",
     "node"
   ],
-  "bugs": {
-    "url": "https://github.com/winteragency/saml2-suomifi/issues"
-  },
   "devDependencies": {
     "mocha": "^3.5.0",
     "coffee-script": "^1.12.0"
@@ -38,7 +35,7 @@
     "async": "^2.6.4",
     "debug": "^2.6.0",
     "underscore": "^1.8.0",
-    "xml-crypto": "^0.10.0",
+    "xml-crypto": "1.0.2",
     "xml-encryption": "1.3.0",
     "xml2js": "^0.4.0",
     "xmlbuilder": "~2.2.0",
