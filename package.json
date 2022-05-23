@@ -1,6 +1,6 @@
 {
-  "name": "saml2-suomifi",
-  "version": "1.1.0",
+  "name": "@lukefi-private/saml2-suomifi",
+  "version": "1.2.3",
   "description": "SAML 2.0 node helpers for Suomi.fi",
   "author": "Winter <info@winteragency.se> (https://winteragency.se)",
   "contributors": [
@@ -18,6 +18,9 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/winteragency/saml2-suomifi.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "keywords": [
     "saml",
