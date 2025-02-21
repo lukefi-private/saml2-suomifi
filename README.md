@@ -1,3 +1,10 @@
+# Status of this fork
+21.2.2025
+
+**DEPRECATED**: DVV has recommended to switch to a original node-saml and passport-saml versions instead of the forked version, which has not been maintained for several years: [vrk-kpa/suomifi-passport-saml - Status of this fork](https://github.com/vrk-kpa/suomifi-passport-saml?tab=readme-ov-file#---status-of-this-fork---)
+
+As such this repo is going to be archived as stale and deprecated. Any implementations should switch to node-saml instead.
+
 # SAML2-suomifi
 
 Forked version of saml2-js module that makes the syntax compatible with Suomi.fi e-identification. Original readme below.
